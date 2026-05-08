@@ -55,7 +55,7 @@ void createSeed(uint8_t *seed, const int seed_len) {
   Serial.print("PUF: ");
   Serial.println(puf);
 
-  const unsigned char *salt = (const unsigned char *)"salt";
+  const unsigned char salt[] = "salt";
   const int iterations = 2048;
 
   // mbedtls_pkcs5_pbkdf2_hmac() a quanto pare è deprecated...
@@ -64,7 +64,7 @@ void createSeed(uint8_t *seed, const int seed_len) {
     (const unsigned char *)puf.c_str(), 
     puf.length(),
     salt, 
-    sizeof(salt),
+    sizeof(salt)-1, // Tolgo il terminatore
     iterations,
     seed_len,
     seed
@@ -245,8 +245,8 @@ void decryptSecret(const char *nvs_namespace, const char *nvs_key) {
   uint8_t decrypted[b64_decoded_len];
   
   uint8_t aes_key[32];
-  esp_aes_context ctx_aes;
-  esp_aes_init(&ctx_aes);
+  mbedtls_aes_context ctx_aes;
+  mbedtls_aes_init(&ctx_aes);
 
   setDecryptionKey(&ctx_aes, aes_key, 256);
 
