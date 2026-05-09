@@ -1,17 +1,27 @@
 #include "puf.h"
 
-extern "C" {
-  #include "esp_mac.h"
-  #include "mbedtls/sha3.h"
+/*
+ * Per utilizzare la libreria SHA3.h, includere la libreria Crypto in Arduino IDE.
+ * Sfortunatamente la libreria sha3.h di mbedtls non è compilata su Arduino, per
+ * qualche motivo: quindi utilizziamo questa soluzione, anche se non è proprio
+ * quella più pulita... 
+ */
+#include <SHA3.h>
+
+extern "C" {  
+  #include "esp_mac.h"  // Per esp_read_mac() e ESP_MAC_WIFI_STA
 }
 
 String getPUF() {
     uint8_t mac[6];
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
 
-    uint8_t hash[32];
+    SHA3_256 hasher;
+    hasher.reset();
+    hasher.update(mac, 6);
 
-    mbedtls_sha3(MBEDTLS_SHA3_256, mac, 6, hash, sizeof(hash));
+    uint8_t hash[32];
+    hasher.finalize(hash, sizeof(hash));
 
     String result;
     char buf[3];
